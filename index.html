@@ -14,7 +14,7 @@
         body {
             background-color: #0d0d11;
             color: #ffffff;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', Roboto, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -24,41 +24,41 @@
 
         .player-container {
             width: 90%;
-            max-width: 800px;
+            max-width: 700px;
             background: rgba(20, 20, 28, 0.85);
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+            padding: 25px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
             border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 20px;
+            gap: 15px;
         }
 
         /* Visualizer Canvas */
         #visualizer {
             width: 100%;
-            height: 180px;
+            height: 160px;
             border-radius: 12px;
-            background: rgba(0, 0, 0, 0.2);
+            background: rgba(0, 0, 0, 0.25);
         }
 
-        /* Track Info & Controls */
+        /* Track Info */
         .info-panel {
             text-align: center;
         }
 
         .track-title {
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             font-weight: bold;
             color: #00f2fe;
-            margin-bottom: 5px;
+            margin-bottom: 4px;
         }
 
         .track-artist {
-            font-size: 0.9rem;
+            font-size: 0.85rem;
             color: #a0a0ab;
         }
 
@@ -67,14 +67,14 @@
             width: 100%;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .time {
-            font-size: 0.85rem;
+            font-size: 0.8rem;
             font-family: monospace;
             color: #00f2fe;
-            min-width: 45px;
+            min-width: 42px;
         }
 
         input[type="range"] {
@@ -83,18 +83,19 @@
             cursor: pointer;
         }
 
-        /* Control Buttons */
+        /* Controls */
         .controls {
             display: flex;
             align-items: center;
             gap: 20px;
+            margin-top: 5px;
         }
 
         .btn {
             background: none;
             border: none;
             color: #ffffff;
-            font-size: 1.5rem;
+            font-size: 1.4rem;
             cursor: pointer;
             transition: transform 0.2s, color 0.2s;
         }
@@ -105,15 +106,15 @@
         }
 
         .btn-play {
-            width: 55px;
-            height: 55px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             background: #00f2fe;
             color: #0d0d11;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.6rem;
+            font-size: 1.5rem;
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
         }
 
@@ -123,19 +124,46 @@
             box-shadow: 0 0 25px rgba(0, 242, 254, 0.8);
         }
 
-        /* Responsive Layout for Mobile */
+        /* Playlist List */
+        .playlist {
+            width: 100%;
+            max-height: 120px;
+            overflow-y: auto;
+            margin-top: 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 5px;
+        }
+
+        .playlist-item {
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            color: #ccc;
+        }
+
+        .playlist-item:hover, .playlist-item.active {
+            background: rgba(0, 242, 254, 0.15);
+            color: #00f2fe;
+            font-weight: bold;
+        }
+
+        /* Responsive Layout Mobile */
         @media (max-width: 600px) {
             .player-container {
-                padding: 20px;
+                padding: 18px;
                 width: 95%;
             }
 
             #visualizer {
-                height: 120px;
+                height: 110px;
             }
 
             .track-title {
-                font-size: 1.1rem;
+                font-size: 1rem;
             }
 
             .controls {
@@ -145,7 +173,7 @@
             .btn-play {
                 width: 45px;
                 height: 45px;
-                font-size: 1.3rem;
+                font-size: 1.2rem;
             }
         }
     </style>
@@ -156,8 +184,8 @@
     <canvas id="visualizer"></canvas>
 
     <div class="info-panel">
-        <div class="track-title" id="title">Judul Lagu</div>
-        <div class="track-artist" id="artist">Nama Artist</div>
+        <div class="track-title" id="title">Memuat Lagu...</div>
+        <div class="track-artist" id="artist">Music Player</div>
     </div>
 
     <div class="progress-container">
@@ -171,23 +199,52 @@
         <button class="btn btn-play" id="play-pause">▶</button>
         <button class="btn" id="next">⏭</button>
     </div>
+
+    <div class="playlist" id="playlist">
+        <!-- Item Playlist Di-generate via JS -->
+    </div>
 </div>
 
-<audio id="audio-element" src="lagu.mp3"></audio>
+<audio id="audio-element" crossorigin="anonymous"></audio>
 
 <script>
+    // Daftar lagu yang ada di dalam folder 'lagu'
+    const songs = [
+        {
+            title: "BANANZA X SUPERNOVA V2",
+            artist: "@HeliosMusic17 #JEPARATOTO",
+            src: "lagu/bananzayQ.mp3"
+        },
+        {
+            title: "TikTok Music 1",
+            artist: "TikTok Remix",
+            src: "lagu/tiktokio.com1792159568_IV02AbC3v1cSPm1ulQcM.mp3"
+        },
+        {
+            title: "TikTok Music 2",
+            artist: "TikTok Remix",
+            src: "lagu/tiktokio.com1792308503_MJkWpG4wDTCo33buooX.mp3"
+        }
+    ];
+
+    let currentSongIndex = 0;
+
     const audio = document.getElementById('audio-element');
     const playBtn = document.getElementById('play-pause');
+    const prevBtn = document.getElementById('prev');
+    const nextBtn = document.getElementById('next');
     const seekBar = document.getElementById('seek-bar');
     const currentTimeEl = document.getElementById('current-time');
     const durationEl = document.getElementById('duration');
+    const titleEl = document.getElementById('title');
+    const artistEl = document.getElementById('artist');
+    const playlistEl = document.getElementById('playlist');
     const canvas = document.getElementById('visualizer');
     const ctx = canvas.getContext('2d');
 
     let audioCtx, analyser, source, dataArray, bufferLength;
     let isInitialized = false;
 
-    // Set canvas resolution
     function resizeCanvas() {
         canvas.width = canvas.offsetWidth;
         canvas.height = canvas.offsetHeight;
@@ -195,7 +252,30 @@
     window.addEventListener('resize', resizeCanvas);
     resizeCanvas();
 
-    // Inisialisasi Audio Context & Visualizer (Saat tombol play diklik pertama kali)
+    function renderPlaylist() {
+        playlistEl.innerHTML = '';
+        songs.forEach((song, index) => {
+            const item = document.createElement('div');
+            item.classList.add('playlist-item');
+            if (index === currentSongIndex) item.classList.add('active');
+            item.innerHTML = `<span>${index + 1}. ${song.title}</span>`;
+            item.addEventListener('click', () => {
+                currentSongIndex = index;
+                loadSong(currentSongIndex);
+                playSong();
+            });
+            playlistEl.appendChild(item);
+        });
+    }
+
+    function loadSong(index) {
+        const song = songs[index];
+        titleEl.textContent = song.title;
+        artistEl.textContent = song.artist;
+        audio.src = song.src;
+        renderPlaylist();
+    }
+
     function initAudio() {
         if (isInitialized) return;
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -213,23 +293,47 @@
         drawVisualizer();
     }
 
-    // Fungsi Play/Pause
-    playBtn.addEventListener('click', () => {
+    function playSong() {
         initAudio();
         if (audioCtx && audioCtx.state === 'suspended') {
             audioCtx.resume();
         }
-
-        if (audio.paused) {
-            audio.play();
+        audio.play().then(() => {
             playBtn.textContent = '⏸';
+        }).catch(err => console.log('Playback error:', err));
+    }
+
+    function pauseSong() {
+        audio.pause();
+        playBtn.textContent = '▶';
+    }
+
+    playBtn.addEventListener('click', () => {
+        if (audio.paused) {
+            playSong();
         } else {
-            audio.pause();
-            playBtn.textContent = '▶';
+            pauseSong();
         }
     });
 
-    // Drawing Visualizer Spectrum
+    prevBtn.addEventListener('click', () => {
+        currentSongIndex = (currentSongIndex - 1 + songs.length) % songs.length;
+        loadSong(currentSongIndex);
+        playSong();
+    });
+
+    nextBtn.addEventListener('click', () => {
+        currentSongIndex = (currentSongIndex + 1) % songs.length;
+        loadSong(currentSongIndex);
+        playSong();
+    });
+
+    audio.addEventListener('ended', () => {
+        currentSongIndex = (currentSongIndex + 1) % songs.length;
+        loadSong(currentSongIndex);
+        playSong();
+    });
+
     function drawVisualizer() {
         requestAnimationFrame(drawVisualizer);
         if (!analyser) return;
@@ -237,13 +341,12 @@
         analyser.getByteFrequencyData(dataArray);
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-        const barWidth = (canvas.width / bufferLength) * 2;
+        const barWidth = (canvas.width / bufferLength) * 2.2;
         let x = 0;
 
         for (let i = 0; i < bufferLength; i++) {
             const barHeight = (dataArray[i] / 255) * canvas.height;
 
-            // Gradient Warna Spektrum (Menyerupai Desain)
             const gradient = ctx.createLinearGradient(0, canvas.height, 0, 0);
             gradient.addColorStop(0, '#00f2fe');
             gradient.addColorStop(0.5, '#4facfe');
@@ -256,14 +359,13 @@
         }
     }
 
-    // Format Waktu MM:SS
     function formatTime(seconds) {
+        if (isNaN(seconds)) return "00:00";
         const min = Math.floor(seconds / 60);
         const sec = Math.floor(seconds % 60);
         return `${min < 10 ? '0' : ''}${min}:${sec < 10 ? '0' : ''}${sec}`;
     }
 
-    // Update Progress Bar
     audio.addEventListener('loadedmetadata', () => {
         seekBar.max = audio.duration;
         durationEl.textContent = formatTime(audio.duration);
@@ -277,6 +379,9 @@
     seekBar.addEventListener('input', () => {
         audio.currentTime = seekBar.value;
     });
+
+    // Load lagu pertama di awal
+    loadSong(currentSongIndex);
 </script>
 </body>
 </html>
