@@ -194,11 +194,12 @@
         <span class="time" id="duration">00:00</span>
     </div>
 
-    <div class="controls">
-        <button class="btn" id="prev">⏮</button>
-        <button class="btn btn-play" id="play-pause">▶</button>
-        <button class="btn" id="next">⏭</button>
-    </div>
+   <div class="controls">
+    <button class="btn" id="prev">⏮</button>
+    <button class="btn btn-play" id="play-pause">▶</button>
+    <button class="btn" id="next">⏭</button>
+    <button class="btn" id="repeat" title="Ulangi Lagu">🔁</button>
+</div>
 
     <div class="playlist" id="playlist">
         <!-- Item Playlist Di-generate via JS -->
@@ -208,31 +209,32 @@
 <audio id="audio-element" crossorigin="anonymous"></audio>
 
 <script>
-    // Daftar lagu yang ada di dalam folder 'lagu'
-   const songs = [
+    const songs = [
         {
             title: "BANANZA X SUPERNOVA V2",
             artist: "@fams.r",
             src: "lagu/bananzayQ.mp3"
         },
         {
-            title: "Music 1",
-            artist: "TikTok Remix",
+            title: "All night",
+            artist: "fams.r",
             src: "lagu/Music 2.mp3"
         },
         {
-            title: "Music 2",
-            artist: "TikTok Remix",
+            title: "Gimme gimme MIKU",
+            artist: "fams.r",
             src: "lagu/Music 3.mp3"
         }
     ];
 
     let currentSongIndex = 0;
+    let isRepeat = false;
 
     const audio = document.getElementById('audio-element');
     const playBtn = document.getElementById('play-pause');
     const prevBtn = document.getElementById('prev');
     const nextBtn = document.getElementById('next');
+    const repeatBtn = document.getElementById('repeat');
     const seekBar = document.getElementById('seek-bar');
     const currentTimeEl = document.getElementById('current-time');
     const durationEl = document.getElementById('duration');
@@ -328,10 +330,22 @@
         playSong();
     });
 
+    // Toggle Repeat On/Off
+    repeatBtn.addEventListener('click', () => {
+        isRepeat = !isRepeat;
+        repeatBtn.classList.toggle('active', isRepeat);
+    });
+
+    // Event Lagu Selesai
     audio.addEventListener('ended', () => {
-        currentSongIndex = (currentSongIndex + 1) % songs.length;
-        loadSong(currentSongIndex);
-        playSong();
+        if (isRepeat) {
+            audio.currentTime = 0;
+            playSong();
+        } else {
+            currentSongIndex = (currentSongIndex + 1) % songs.length;
+            loadSong(currentSongIndex);
+            playSong();
+        }
     });
 
     function drawVisualizer() {
@@ -380,7 +394,6 @@
         audio.currentTime = seekBar.value;
     });
 
-    // Load lagu pertama di awal
     loadSong(currentSongIndex);
 </script>
 </body>
