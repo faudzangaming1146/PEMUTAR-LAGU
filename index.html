@@ -3,78 +3,129 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Web Music Player</title>
+    <title>Web Music Player Modern</title>
     <style>
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
+            cursor: default; /* Kursor kustom digunakan via canvas */
         }
 
         body {
-            background-color: #0d0d11;
+            background: linear-gradient(135deg, #09090e 0%, #161626 50%, #0d0d1a 100%);
             color: #ffffff;
             font-family: 'Segoe UI', Roboto, sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
             min-height: 100vh;
-            overflow: hidden;
-        }
-
-        .player-container {
-            width: 90%;
-            max-width: 700px;
-            background: rgba(20, 20, 28, 0.85);
-            backdrop-filter: blur(12px);
-            border-radius: 20px;
-            padding: 25px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.6);
-            border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            overflow-x: hidden;
         }
 
-        /* Visualizer Canvas */
+        /* Canvas untuk Efek Bintang & Kursor */
+        #star-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 9999;
+        }
+
+        /* Container & Layout */
+        .container {
+            width: 100%;
+            max-width: 850px;
+            padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 40px;
+        }
+
+        /* Animasi Scroll (Fade In & Slide Up) */
+        .scroll-anim {
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        .scroll-anim.show {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero / Header Section */
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(90deg, #00f2fe, #4facfe, #00f2fe);
+            background-size: 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: glowText 4s linear infinite;
+        }
+
+        @keyframes glowText {
+            0% { background-position: 0%; }
+            100% { background-position: 200%; }
+        }
+
+        /* Card Music Player Glassmorphism */
+        .player-card {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-radius: 24px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
         #visualizer {
             width: 100%;
-            height: 160px;
-            border-radius: 12px;
-            background: rgba(0, 0, 0, 0.25);
+            height: 180px;
+            border-radius: 16px;
+            background: rgba(0, 0, 0, 0.3);
         }
 
-        /* Track Info */
         .info-panel {
             text-align: center;
         }
 
         .track-title {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: bold;
             color: #00f2fe;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.3);
         }
 
         .track-artist {
-            font-size: 0.85rem;
-            color: #a0a0ab;
+            font-size: 0.9rem;
+            color: #b0b0c2;
         }
 
         /* Progress Bar */
         .progress-container {
-            width: 100%;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
 
         .time {
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             font-family: monospace;
             color: #00f2fe;
-            min-width: 42px;
+            min-width: 45px;
         }
 
         input[type="range"] {
@@ -86,129 +137,142 @@
         /* Controls */
         .controls {
             display: flex;
+            justify-content: center;
             align-items: center;
-            gap: 20px;
-            margin-top: 5px;
+            gap: 25px;
         }
 
         .btn {
             background: none;
             border: none;
             color: #ffffff;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
             cursor: pointer;
-            transition: transform 0.2s, color 0.2s;
+            transition: all 0.3s ease;
         }
 
         .btn:hover {
             color: #00f2fe;
-            transform: scale(1.1);
+            transform: scale(1.15);
+        }
+
+        .btn.active {
+            color: #00f2fe;
+            text-shadow: 0 0 12px rgba(0, 242, 254, 0.9);
         }
 
         .btn-play {
-            width: 50px;
-            height: 50px;
+            width: 56px;
+            height: 56px;
             border-radius: 50%;
-            background: #00f2fe;
-            color: #0d0d11;
+            background: linear-gradient(135deg, #00f2fe, #4facfe);
+            color: #09090e;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5rem;
-            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+            font-size: 1.6rem;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
         }
 
         .btn-play:hover {
-            color: #0d0d11;
-            transform: scale(1.08);
-            box-shadow: 0 0 25px rgba(0, 242, 254, 0.8);
+            transform: scale(1.1);
+            box-shadow: 0 0 30px rgba(0, 242, 254, 0.8);
+            color: #09090e;
         }
 
-        /* Playlist List */
+        /* Playlist */
+        .playlist-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .playlist-title {
+            font-size: 1.1rem;
+            margin-bottom: 12px;
+            color: #4facfe;
+            font-weight: 600;
+        }
+
         .playlist {
-            width: 100%;
-            max-height: 120px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 180px;
             overflow-y: auto;
-            margin-top: 10px;
-            background: rgba(0, 0, 0, 0.2);
-            border-radius: 10px;
-            padding: 5px;
         }
 
         .playlist-item {
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            border-radius: 6px;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            border-radius: 10px;
             cursor: pointer;
+            background: rgba(255, 255, 255, 0.02);
+            transition: all 0.2s ease;
             display: flex;
             justify-content: space-between;
-            color: #ccc;
         }
 
         .playlist-item:hover, .playlist-item.active {
             background: rgba(0, 242, 254, 0.15);
             color: #00f2fe;
-            font-weight: bold;
+            border-left: 4px solid #00f2fe;
         }
 
-        /* Responsive Layout Mobile */
         @media (max-width: 600px) {
-            .player-container {
-                padding: 18px;
-                width: 95%;
-            }
-
-            #visualizer {
-                height: 110px;
-            }
-
-            .track-title {
-                font-size: 1rem;
-            }
-
-            .controls {
-                gap: 15px;
-            }
-
-            .btn-play {
-                width: 45px;
-                height: 45px;
-                font-size: 1.2rem;
-            }
+            .header h1 { font-size: 1.8rem; }
+            .player-card { padding: 20px; }
+            #visualizer { height: 120px; }
+            .btn-play { width: 48px; height: 48px; font-size: 1.3rem; }
+            .controls { gap: 15px; }
         }
     </style>
 </head>
 <body>
 
-<div class="player-container">
-    <canvas id="visualizer"></canvas>
+<canvas id="star-canvas"></canvas>
 
-    <div class="info-panel">
-        <div class="track-title" id="title">Memuat Lagu...</div>
-        <div class="track-artist" id="artist">Music Player</div>
+<div class="container">
+    <div class="header scroll-anim">
+        <h1>✨ Modern Music Player ✨</h1>
     </div>
 
-    <div class="progress-container">
-        <span class="time" id="current-time">00:00</span>
-        <input type="range" id="seek-bar" value="0" min="0" step="0.1">
-        <span class="time" id="duration">00:00</span>
+    <div class="player-card scroll-anim">
+        <canvas id="visualizer"></canvas>
+
+        <div class="info-panel">
+            <div class="track-title" id="title">Memuat Lagu...</div>
+            <div class="track-artist" id="artist">Music Player</div>
+        </div>
+
+        <div class="progress-container">
+            <span class="time" id="current-time">00:00</span>
+            <input type="range" id="seek-bar" value="0" min="0" step="0.1">
+            <span class="time" id="duration">00:00</span>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="prev">⏮</button>
+            <button class="btn btn-play" id="play-pause">▶</button>
+            <button class="btn" id="next">⏭</button>
+            <button class="btn" id="repeat" title="Ulangi Lagu">🔁</button>
+        </div>
     </div>
 
-   <div class="controls">
-    <button class="btn" id="prev">⏮</button>
-    <button class="btn btn-play" id="play-pause">▶</button>
-    <button class="btn" id="next">⏭</button>
-    <button class="btn" id="repeat" title="Ulangi Lagu">🔁</button>
-</div>
-
-    <div class="playlist" id="playlist">
-        <!-- Item Playlist Di-generate via JS -->
+    <div class="playlist-card scroll-anim">
+        <div class="playlist-title">🎵 Playlist Lagu</div>
+        <div class="playlist" id="playlist"></div>
     </div>
 </div>
 
 <audio id="audio-element" crossorigin="anonymous"></audio>
 
 <script>
+    // ----------------------------------------------------
+    // 1. DAFTAR LAGU
+    // ----------------------------------------------------
     const songs = [
         {
             title: "BANANZA X SUPERNOVA V2",
@@ -217,12 +281,12 @@
         },
         {
             title: "All night",
-            artist: "fams.r",
+            artist: "@fams.r",
             src: "lagu/Music 2.mp3"
         },
         {
-            title: "Gimme gimme MIKU",
-            artist: "fams.r",
+            title: "GIMME GIMME",
+            artist: "@fams.r",
             src: "lagu/Music 3.mp3"
         }
     ];
@@ -260,7 +324,7 @@
             const item = document.createElement('div');
             item.classList.add('playlist-item');
             if (index === currentSongIndex) item.classList.add('active');
-            item.innerHTML = `<span>${index + 1}. ${song.title}</span>`;
+            item.innerHTML = `<span>${index + 1}. ${song.title}</span><span>${song.artist}</span>`;
             item.addEventListener('click', () => {
                 currentSongIndex = index;
                 loadSong(currentSongIndex);
@@ -302,7 +366,7 @@
         }
         audio.play().then(() => {
             playBtn.textContent = '⏸';
-        }).catch(err => console.log('Playback error:', err));
+        }).catch(err => console.log(err));
     }
 
     function pauseSong() {
@@ -311,11 +375,8 @@
     }
 
     playBtn.addEventListener('click', () => {
-        if (audio.paused) {
-            playSong();
-        } else {
-            pauseSong();
-        }
+        if (audio.paused) playSong();
+        else pauseSong();
     });
 
     prevBtn.addEventListener('click', () => {
@@ -330,13 +391,11 @@
         playSong();
     });
 
-    // Toggle Repeat On/Off
     repeatBtn.addEventListener('click', () => {
         isRepeat = !isRepeat;
         repeatBtn.classList.toggle('active', isRepeat);
     });
 
-    // Event Lagu Selesai
     audio.addEventListener('ended', () => {
         if (isRepeat) {
             audio.currentTime = 0;
@@ -395,6 +454,149 @@
     });
 
     loadSong(currentSongIndex);
+
+    // ----------------------------------------------------
+    // 2. ANIMASI GESER / SCROLL (FADE IN SLIDE UP)
+    // ----------------------------------------------------
+    const animElements = document.querySelectorAll('.scroll-anim');
+
+    function checkScroll() {
+        const triggerBottom = window.innerHeight * 0.85;
+        animElements.forEach(el => {
+            const top = el.getBoundingClientRect().top;
+            if (top < triggerBottom) {
+                el.classList.add('show');
+            }
+        });
+    }
+
+    window.addEventListener('scroll', checkScroll);
+    checkScroll(); // Cek langsung saat pertama kali dipanggil
+
+    // ----------------------------------------------------
+    // 3. EFEK BINTANG, KURSOR, TRAIL & TOUCH
+    // ----------------------------------------------------
+    const starCanvas = document.getElementById('star-canvas');
+    const sCtx = starCanvas.getContext('2d');
+
+    function resizeStarCanvas() {
+        starCanvas.width = window.innerWidth;
+        starCanvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeStarCanvas);
+    resizeStarCanvas();
+
+    const particles = [];
+    let mouse = { x: -100, y: -100, isTouch: false };
+
+    // Menggambar Bintang
+    function drawStar(cx, cy, spikes, outerRadius, innerRadius, color, alpha = 1) {
+        let rot = Math.PI / 2 * 3;
+        let x = cx;
+        let y = cy;
+        let step = Math.PI / spikes;
+
+        sCtx.save();
+        sCtx.beginPath();
+        sCtx.moveTo(cx, cy - outerRadius);
+
+        for (let i = 0; i < spikes; i++) {
+            x = cx + Math.cos(rot) * outerRadius;
+            y = cy + Math.sin(rot) * outerRadius;
+            sCtx.lineTo(x, y);
+            rot += step;
+
+            x = cx + Math.cos(rot) * innerRadius;
+            y = cy + Math.sin(rot) * innerRadius;
+            sCtx.lineTo(x, y);
+            rot += step;
+        }
+
+        sCtx.lineTo(cx, cy - outerRadius);
+        sCtx.closePath();
+        sCtx.fillStyle = color;
+        sCtx.globalAlpha = alpha;
+        sCtx.shadowBlur = 12;
+        sCtx.shadowColor = '#00f2fe';
+        sCtx.fill();
+        sCtx.restore();
+    }
+
+    // Partikel Jejak Bintang
+    class StarParticle {
+        constructor(x, y, isBurst = false) {
+            this.x = x;
+            this.y = y;
+            this.size = isBurst ? Math.random() * 8 + 4 : Math.random() * 5 + 2;
+            this.vx = (Math.random() - 0.5) * (isBurst ? 4 : 1.5);
+            this.vy = (Math.random() - 0.5) * (isBurst ? 4 : 1.5);
+            this.alpha = 1;
+            this.decay = Math.random() * 0.02 + 0.015;
+            this.color = Math.random() > 0.5 ? '#00f2fe' : '#ffffff';
+        }
+
+        update() {
+            this.x += this.vx;
+            this.y += this.vy;
+            this.alpha -= this.decay;
+        }
+
+        draw() {
+            if (this.alpha <= 0) return;
+            drawStar(this.x, this.y, 5, this.size, this.size / 2, this.color, this.alpha);
+        }
+    }
+
+    // Event Mouse (Laptop)
+    window.addEventListener('mousemove', (e) => {
+        mouse.x = e.clientX;
+        mouse.y = e.clientY;
+        mouse.isTouch = false;
+
+        // Tambah jejak bintang di belakang mouse
+        particles.push(new StarParticle(e.clientX, e.clientY));
+    });
+
+    // Event Touch (HP / Layar Sentuh)
+    function handleTouch(e) {
+        if (e.touches.length > 0) {
+            const touch = e.touches[0];
+            mouse.x = touch.clientX;
+            mouse.y = touch.clientY;
+            mouse.isTouch = true;
+
+            // Munculkan percikan bintang pas disentuh
+            for (let i = 0; i < 6; i++) {
+                particles.push(new StarParticle(touch.clientX, touch.clientY, true));
+            }
+        }
+    }
+
+    window.addEventListener('touchstart', handleTouch);
+    window.addEventListener('touchmove', handleTouch);
+
+    // Loop Animasi Canvas Bintang
+    function animateStars() {
+        sCtx.clearRect(0, 0, starCanvas.width, starCanvas.height);
+
+        // Update & gambar partikel jejak
+        for (let i = particles.length - 1; i >= 0; i--) {
+            particles[i].update();
+            particles[i].draw();
+            if (particles[i].alpha <= 0) {
+                particles.splice(i, 1);
+            }
+        }
+
+        // Gambar Bintang Utama (Kursor / Sentuhan)
+        if (mouse.x > 0 && mouse.y > 0) {
+            drawStar(mouse.x, mouse.y, 5, 12, 6, '#00f2fe', 1);
+        }
+
+        requestAnimationFrame(animateStars);
+    }
+
+    animateStars();
 </script>
 </body>
 </html>
